@@ -1,0 +1,32 @@
+package com.example.backendAppMovil.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "detalle_pedido")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class DetallePedido {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @ManyToOne
+    @JoinColumn(name = "pedido_id", nullable = false)
+    @JsonIgnore
+    private Pedido pedido;
+
+    @Column(nullable = false)
+    private Integer rawgId; // El juego que compró (ID de RAWG)
+    
+    @Column(nullable = false)
+    private Integer precioUnitario; 
+
+    @Column(nullable = false)
+    private Integer cantidad;
+}

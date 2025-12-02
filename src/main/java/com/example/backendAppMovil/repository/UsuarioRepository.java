@@ -6,6 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.backendAppMovil.model.Usuario;
 
+import org.springframework.stereotype.Repository;
+
+@Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     Optional<Usuario> findByUsername(String username);
     Optional<Usuario> findByRut(String rut);

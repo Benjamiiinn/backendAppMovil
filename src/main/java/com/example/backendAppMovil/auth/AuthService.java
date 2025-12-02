@@ -24,8 +24,12 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-        Usuario usuario = usuarioRepository.findByUsername(request.getUsername()).orElseThrow();
+
+        Usuario usuario = usuarioRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
         String token = jwtService.getToken(usuario);
+        
         return AuthResponse.builder()
             .token(token)
             .role(usuario.getRol().name())
@@ -36,6 +40,10 @@ public class AuthService {
     public AuthResponse register(RegisterRequest request) {
         if (!RutUtils.validarRut(request.getRut())) {
             throw new IllegalArgumentException("El RUT ingresado no es valido");
+        }
+
+        if (usuarioRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new IllegalArgumentException("El email ya está registrado");
         }
         
         Usuario usuario = Usuario.builder()

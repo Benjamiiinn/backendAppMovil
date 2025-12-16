@@ -3,6 +3,9 @@ package com.example.backendAppMovil.service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -10,11 +13,11 @@ import org.springframework.stereotype.Service;
 
 import com.example.backendAppMovil.dto.CompraRequest;
 import com.example.backendAppMovil.model.DetallePedido;
-import com.example.backendAppMovil.model.Inventario;
+import com.example.backendAppMovil.model.Producto;
 import com.example.backendAppMovil.model.Pedido;
 import com.example.backendAppMovil.model.Usuario;
-import com.example.backendAppMovil.repository.InventarioRepository;
 import com.example.backendAppMovil.repository.PedidoRepository;
+import com.example.backendAppMovil.repository.ProductoRepository;
 import com.example.backendAppMovil.repository.UsuarioRepository;
 
 import jakarta.transaction.Transactional;
@@ -26,20 +29,19 @@ public class PedidoService {
     private PedidoRepository pedidoRepository;
 
     @Autowired
-    private InventarioRepository inventarioRepository;
+    private UsuarioService usuarioService;
 
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    @Transactional
-    public Pedido procesarCompra(CompraRequest request) {
-        
-        // 1. Identificar al usuario que está comprando
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Usuario usuario = usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    @Autowired
+    private ProductoRepository productoRepository;
 
-        // 2. Crear el pedido base
+    @Transactional
+    public Pedido realizarCompra(CompraRequest request) {
+
+        Usuario usuario = usuarioService.buscarPorId(request.getIdUsuario());
+
         Pedido pedido = new Pedido();
         pedido.setUsuario(usuario);
         pedido.setFecha(LocalDateTime.now());
@@ -49,44 +51,54 @@ public class PedidoService {
         List<DetallePedido> detalles = new ArrayList<>();
         int totalCalculado = 0;
 
-        // 3. Recorrer los items del carrito
         for (CompraRequest.ItemCompra item : request.getItems()) {
             
-            // Buscar el juego en TU inventario
-            Inventario juegoEnInventario = inventarioRepository.findByRawgId(item.getRawgId())
-                    .orElseThrow(() -> new RuntimeException("Juego no disponible en tienda (ID: " + item.getRawgId() + ")"));
+            // Buscamos el producto en la BD (Ya no Inventario, sino Producto)
+            Producto producto = productoRepository.findById(item.getIdProducto())
+                    .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
-            // Validar Stock
-            if (juegoEnInventario.getStock() < item.getCantidad()) {
-                throw new RuntimeException("Stock insuficiente para: " + item.getRawgId()); 
-                // Al lanzar esta excepción, @Transactional deshace todo lo anterior automáticamente
+            // Descontamos stock
+            if (producto.getStock() < item.getCantidad()) {
+                throw new RuntimeException("Sin stock para: " + producto.getNombre());
             }
 
-            // Descontar Stock
-            juegoEnInventario.setStock(juegoEnInventario.getStock() - item.getCantidad());
-            inventarioRepository.save(juegoEnInventario);
+            producto.setStock(producto.getStock() - item.getCantidad());
+            productoRepository.save(producto);
 
-            // Crear el detalle de este item
+            List<String> codigos = IntStream.range(0, item.getCantidad())
+                    .mapToObj(i -> generarCodigoUnico())
+                    .collect(Collectors.toList());
+            
+            // Unimos los códigos en un texto (ej: "KEY-123, KEY-456")
+            String licenciasGeneradas = String.join(", ", codigos);
+
+            // Creamos el detalle y le asignamos las licencias
             DetallePedido detalle = new DetallePedido();
             detalle.setPedido(pedido);
-            detalle.setRawgId(item.getRawgId());
+            detalle.setProducto(producto);
             detalle.setCantidad(item.getCantidad());
-            detalle.setPrecioUnitario(juegoEnInventario.getPrecio()); // Usamos el precio real de la BD
+            detalle.setPrecioUnitario(item.getPrecio());
+            detalle.setLicencias(licenciasGeneradas);
 
             detalles.add(detalle);
-            totalCalculado += (juegoEnInventario.getPrecio() * item.getCantidad());
+            totalCalculado += (item.getPrecio() * item.getCantidad());
         }
 
-        pedido.setDetalles(detalles);
         pedido.setTotal(totalCalculado);
+        pedido.setDetalles(detalles);
 
         return pedidoRepository.save(pedido);
+    }
+
+    private String generarCodigoUnico() {
+        return "KEY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
     @Transactional
     public List<Pedido> misPedidos() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Usuario usuario = usuarioRepository.findByUsername(username).orElseThrow();
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         return pedidoRepository.findByUsuario(usuario);
     }
 }

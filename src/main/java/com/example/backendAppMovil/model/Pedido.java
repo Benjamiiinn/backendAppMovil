@@ -10,7 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "pedidos")
+@Table(name = "pedido")
 @Data
 @Builder
 @NoArgsConstructor
@@ -23,13 +23,16 @@ public class Pedido {
 
     @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = false)
-    private Usuario usuario; // El usuario que compró
+    private Usuario usuario; 
 
+    @Column(nullable = false)
     private LocalDateTime fecha;
+
     @Column(nullable = false)
     private Integer total; // Total pagado
+
     @Column(nullable = false)
-    private String estado; // "COMPLETADO"
+    private String estado;
 
     @Column(nullable = false)
     private String metodoPago;

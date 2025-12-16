@@ -34,7 +34,7 @@ public class PedidoController {
     @PostMapping("/checkout")
     public ResponseEntity<?> realizarCompra(@RequestBody CompraRequest request) {
         try {
-            Pedido pedido = pedidoService.procesarCompra(request);
+            Pedido pedido = pedidoService.realizarCompra(request);
             return ResponseEntity.ok(pedido);
         } catch (RuntimeException e) {
             // Si falla el stock, devolvemos error 400 con el mensaje

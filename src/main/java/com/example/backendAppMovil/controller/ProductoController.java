@@ -56,7 +56,7 @@ public class ProductoController {
         return ResponseEntity.ok(productoService.buscarPorNombre(nombre));
     }
 
-    @GetMapping("/categoria/{nombrePlataforma}")
+    @GetMapping("/plataforma/{nombrePlataforma}")
     public ResponseEntity<List<Producto>> buscarPorPlataforma(@PathVariable String nombrePlataforma) {
         return ResponseEntity.ok(productoService.findByPlataforma(nombrePlataforma));
     }

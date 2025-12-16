@@ -20,13 +20,21 @@ public class DetallePedido {
     @JoinColumn(name = "pedido_id", nullable = false)
     @JsonIgnore
     private Pedido pedido;
-
-    @Column(nullable = false)
-    private Integer rawgId; // El juego que compró (ID de RAWG)
     
+    @ManyToOne
+    @JoinColumn(name = "producto_id", nullable = false)
+    private Producto producto;
+
     @Column(nullable = false)
     private Integer precioUnitario; 
 
     @Column(nullable = false)
     private Integer cantidad;
+
+    @Column(columnDefinition = "TEXT")
+    private String licencias;
+
+    public Integer getSubtotal() {
+        return this.precioUnitario* this.cantidad;
+    }
 }

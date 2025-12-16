@@ -35,19 +35,34 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(authRequest ->
                 authRequest
-                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/auth/**").permitAll() //Reg
 
-                .requestMatchers(HttpMethod.GET, "/api/v1/inventario/**").authenticated()
-                // SOLO EL ADMIN puede crear o modificar precios/stock (Admin Screen)
-                .requestMatchers(HttpMethod.POST, "/api/v1/inventario/**").hasAuthority("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/v1/inventario/**").hasAuthority("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/v1/inventario/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/v1/productos/**").authenticated() //Si o si tener una cuenta
+                .requestMatchers(HttpMethod.GET, "/api/v1/plataforma/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/v1/generos/**").authenticated()
+
+                //Solo ADMIN puede crear, editar o borrar productos
+                .requestMatchers(HttpMethod.POST, "/api/v1/productos/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/productos/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/productos/**").hasAuthority("ADMIN")
+
+                // Plataformas
+                .requestMatchers(HttpMethod.POST, "/api/v1/plataformas/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/plataformas/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/plataformas/**").hasAuthority("ADMIN")
+
+                //Generos
+                .requestMatchers(HttpMethod.POST, "/api/v1/generos/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/generos/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/generos/**").hasAuthority("ADMIN")
 
                 // El usuario normal solo puede comprar y ver SUS pedidos
                 .requestMatchers("/api/v1/pedidos/checkout").authenticated()
                 .requestMatchers("/api/v1/pedidos/mis-pedidos").authenticated()
+
                 // El ADMIN puede ver TODOS los pedidos (el endpoint GET general)
                 .requestMatchers(HttpMethod.GET, "/api/v1/pedidos").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/v1/pedidos/**").hasAuthority("ADMIN")
 
                 // Permitimos ver detalles si estás logueado (la lógica de "si es mi pedido" se puede validar en el service)
                 .requestMatchers("/api/v1/detalles/**").authenticated()

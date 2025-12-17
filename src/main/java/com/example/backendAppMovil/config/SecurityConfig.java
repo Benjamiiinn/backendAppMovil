@@ -67,8 +67,13 @@ public class SecurityConfig {
                 // Permitimos ver detalles si estás logueado (la lógica de "si es mi pedido" se puede validar en el service)
                 .requestMatchers("/api/v1/detalles/**").authenticated()
 
-                // Solo el admin puede listar, borrar o editar otros usuarios
-                .requestMatchers("/api/v1/usuarios/**").hasAuthority("ADMIN")
+                // Para permitir que los usuarios puedan ver sus datos.
+                .requestMatchers("/api/v1/usuarios/**").authenticated()
+
+                // Pero solo el ADMIN puede crear, editar o borrar usuarios manualmente
+                .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/usuarios/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/usuarios/**").hasAuthority("ADMIN")
                 .anyRequest().authenticated()
                 )
             .sessionManagement(sessionManager ->

@@ -38,7 +38,7 @@ public class SecurityConfig {
                 .requestMatchers("/auth/**").permitAll() //Reg
 
                 .requestMatchers(HttpMethod.GET, "/api/v1/productos/**").authenticated() //Si o si tener una cuenta
-                .requestMatchers(HttpMethod.GET, "/api/v1/plataforma/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/v1/plataformas/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/v1/generos/**").authenticated()
 
                 //Solo ADMIN puede crear, editar o borrar productos
